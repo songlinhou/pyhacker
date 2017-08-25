@@ -5,7 +5,8 @@ Created on Sun May  7 07:50:10 2017
 @author: Ray
 """
 import base64
-
+import urllib2
+import datetime
 
 class OpenKVCore:
     def postComment(self, session, content, comment_url):
@@ -55,3 +56,9 @@ class OpenKVCore:
         else:
             s = '#SEP#' + username + '#SEP#' + password + '#SEP#' + key + '#SEP#'
         return record.find(s) >= 0
+
+    def getOnlineUTCTime(self):
+        webpage = urllib2.urlopen("http://just-the-time.appspot.com/")
+        internettime = webpage.read()
+        OnlineUTCTime = datetime.datetime.strptime(internettime.strip(), '%Y-%m-%d %H:%M:%S')
+        return OnlineUTCTime

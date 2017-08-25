@@ -26,6 +26,7 @@ import requests
 import datetime
 import base64
 import pytz
+import urllib2
 from openkvCore import OpenKVCore
 
 
@@ -41,11 +42,15 @@ class OpenKV(object):
             self.webbase_id = 'W7EWD8rb'
         else:
             self.webbase_id = webbase_id
+        self.online_time = True
         self.data = {'code': None, 'lang': "Plain Text", 'submit': 'Submit'}
         self.comment_url = 'http://codepad.org/' + self.webbase_id + '/post'
         self.session = requests.session()
         self.kvcore = OpenKVCore()
         self.kvcore.login(self.root, self.pwd, self.session)
+
+    def config(online_time=True):
+        self.online_time = online_time
 
     def createDB(self, description):
         self.data['code'] = description.strip()
@@ -71,7 +76,12 @@ class OpenKV(object):
     def setValue(self, username, password, key, value):
         upload_raw = ''
         tz = pytz.timezone('Asia/Shanghai')
-        stamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now(tz))
+        if self.online_time:
+            now = self.kvcore.getOnlineUTCTime()
+            now = now.replace(tzinfo=None)
+        else:
+            now = datetime.datetime.now(tz)
+        stamp = '{:%Y-%m-%d %H:%M:%S}'.format(now)
         content_filtered = base64.b64encode(value)
         upload_raw = '#SEP#'.join([stamp, username, password, key, content_filtered])
         upload_raw = "$HEAD$" + upload_raw + "$TAIL$"

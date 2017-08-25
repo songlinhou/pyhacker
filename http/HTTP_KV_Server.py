@@ -7,19 +7,57 @@ import sys
 
 sys.path.insert(0,'..')
 from my_plugins.kvdb.openkv import OpenKV
+from my_plugins.unitime import getOnlineUTCTime
 import others.arts as arts
+from others.kvids import KVID
 
 from colorama import init, AnsiToWin32, Fore, Style
+
+"""
+To support color display in all platforms, like linux, mac osx, windows, and etc.
+
+We use different approaches to deal with the color display in windows and non-windows
+
+operating systems.
+
+"""
 init(wrap=False)
 stream = AnsiToWin32(sys.stderr).stream
-win_sys = False
-
-USER,PASS = "rock","112233"
-target_client = None
-
+win_sys = False # determine whether current os is windows.
 if sys.platform.startswith("win"):
     win_sys = True
 
+"""
+If you cannot connect the server, you can tune with the online_time parameter.
+
+When online_time is set to True, the time will be grabbed from a website, which
+
+means you may need to check the accessibility of this website in your browswer
+
+mannually.
+
+"""
+online_time = True
+
+
+
+"""
+This is the access information of your current kv database.
+
+We strongly suggest you to replace the original value with yours for safety and efficiency concerns.
+
+"""
+USER,PASS = "user1","112233"
+
+
+
+target_client = None # the name of the current target client
+
+
+"""
+TODO: function or class specification
+
+"""
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -31,6 +69,10 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
+"""
+TODO: function or class specification
+
+"""
 def latest_val_of(kv,key,time=False):
     global USER,PASS
     if not time:
@@ -46,25 +88,41 @@ def latest_val_of(kv,key,time=False):
             return None,None
 
 
-def init_connection():
+"""
+TODO: function or class specification
+
+"""
+def init_connection(base_id):
     if not win_sys:
         print bcolors.BOLD + bcolors.OKGREEN + "[+]Initiating Remote Connection" + bcolors.ENDC + bcolors.ENDC
     else:
         print >>stream, Fore.LIGHTGREEN_EX + "[+]Initiating Remote Connection" + Style.RESET_ALL
     kv = OpenKV()
-    kv_id = '4K5gyNGZ'
-    kv.setDB(kv_id)
+    kv.setDB(base_id)
 
     return kv
 
+
+"""
+TODO: function or class specification
+
+"""
 def current_time():
-    tz = pytz.timezone('Asia/Shanghai')
-    now = datetime.datetime.now(tz)
-    now = now.replace(tzinfo=None)
+    if not online_time:
+        tz = pytz.timezone('Asia/Shanghai')
+        now = datetime.datetime.now(tz)
+    else:
+        now = getOnlineUTCTime()
+        now = now.replace(tzinfo=None)
     now_list = (str(now.year),str(now.month),str(now.day),str(now.hour),str(now.minute),str(now.second))
     now_str = '-'.join(now_list)
     return now_str
 
+
+"""
+TODO: function or class specification
+
+"""
 def server_on(kv):
     status = {}
     status['time'] = current_time()
@@ -79,6 +137,11 @@ def server_on(kv):
     else:
         print >>stream, Fore.LIGHTGREEN_EX + "[+]Server is now online(" + current_time() + ")" + Style.RESET_ALL
 
+
+"""
+TODO: function or class specification
+
+"""
 def server_off(kv):
     status = {}
     status['time'] = current_time()
@@ -92,6 +155,12 @@ def server_off(kv):
         print bcolors.WARNING + bcolors.BOLD + "[!]Server is now offline" + bcolors.ENDC + bcolors.ENDC
     else:
         print >>stream, Fore.LIGHTYELLOW_EX + "[!]Server is now offline" + Style.RESET_ALL
+
+
+"""
+TODO: function or class specification
+
+"""
 def get_connected_users(kv,max_check = 100):
     records = kv.getValue(USER, PASS, 'initiation')['initiation']
     key_list = records.keys()
@@ -109,6 +178,11 @@ def get_connected_users(kv,max_check = 100):
         users.append(user_record)
     return users,ips
 
+
+"""
+TODO: function or class specification
+
+"""
 def str_to_time(time_str):
     main,minor = time_str.split()
     year,month,day, = main.strip().split('-')
@@ -116,6 +190,11 @@ def str_to_time(time_str):
     time_list = (int(year),int(month),int(day),int(hour),int(minute),int(second))
     return datetime.datetime(*time_list)
 
+
+"""
+TODO: function or class specification
+
+"""
 def serve(kv):
     global USER,PASS,target_client
 
@@ -242,6 +321,11 @@ def serve(kv):
                 command_id += 1
 
 
+
+"""
+TODO: function or class specification
+
+"""
 def waiting_response(kv,command_id):
     try:
         if not win_sys:
@@ -259,9 +343,12 @@ def waiting_response(kv,command_id):
                     continue
                 else:
                     arrival_time = str_to_time(arrival_time)
-                    tz = pytz.timezone('Asia/Shanghai')
-                    now = datetime.datetime.now(tz)
-                    now = now.replace(tzinfo=None)
+                    if not online_time:
+                        tz = pytz.timezone('Asia/Shanghai')
+                        now = datetime.datetime.now(tz)
+                    else:
+                        now = getOnlineUTCTime()
+                        now = now.replace(tzinfo=None)
                     time_delta = now - arrival_time
                     if time_delta.seconds < 5:
                         break
@@ -281,16 +368,26 @@ def waiting_response(kv,command_id):
         else:
             print >>stream, Fore.LIGHTRED_EX + '[-]Abort..' + Style.RESET_ALL
 
+
+"""
+TODO: function or class specification
+
+"""
 def show_header():
     if not win_sys:
         print bcolors.OKGREEN + arts.header() + bcolors.ENDC
     else:
         print >>stream, Fore.LIGHTGREEN_EX + arts.header() + Style.RESET_ALL
 
+
+"""
+This is the program entry.
+
+"""
 if __name__ == "__main__":
     try:
         show_header()
-        db = init_connection()
+        db = init_connection(KVID.DEFAULT)
         server_on(db)
         serve(db)
     except KeyboardInterrupt:

