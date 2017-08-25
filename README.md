@@ -81,6 +81,7 @@ Copy the project folder *pyhacker* to both attacker machine and target machines.
 
 Run the corresponding scripts in different machines. And a connection will be automatically set up.
 
+
 - On Attacker Machine
 
 ```
@@ -95,7 +96,35 @@ $ cd pyhacker/http
 $ python HTTP_KV_Client.py
 ```
 
-### 4 Example
+**[NOTE 1]** Please use *pip install _modulename_* if you need to install a mudule.
 
+**[NOTE 2]** In future release, we will integrate tools which generates binaries for different platform. For now, you can generate binaries by yourself. Read more on *py2exe* and *py2app*.
+
+## 4 Example
+
+There are some screenshots from different operating systems. 
+
+- Initiate server (on Mac OSX)
+
+![GitHub set up](https://github.com/201528015329004/pyhacker/blob/master/docs/images/server_init.png?raw=true)
+
+- Initiate client (on Windows 10)
+
+![GitHub set up](https://github.com/201528015329004/pyhacker/blob/master/docs/images/client_init.png?raw=true)
+
+- Successful connection
+
+( 1 ) The server is running on a Mac OSX machine while a client is waiting on a windows machine. By typing commands of windows platform, the server grabs the output from the window client machine.
+
+![GitHub set up](https://github.com/201528015329004/pyhacker/blob/master/docs/images/server_cmd.png?raw=true)
+
+( 2 ) The client is waiting for requests sent from server.
+
+![GitHub set up](https://github.com/201528015329004/pyhacker/blob/master/docs/images/client_cmd.png?raw=true)
+
+
+- When server is down, the client will keep waiting.
+
+![GitHub set up](https://github.com/201528015329004/pyhacker/blob/master/docs/images/client_serveroff.png?raw=true)
 
 
