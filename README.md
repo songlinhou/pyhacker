@@ -1,5 +1,7 @@
 # pyhacker 1.0 (Beta)
 
+语言：[中文](https://github.com/201528015329004/pyhacker/blob/master/docs/README_CN.md) / English
+
 > Initiator: Songlin Hou
 
 Fully Compatible with Python 2.7
